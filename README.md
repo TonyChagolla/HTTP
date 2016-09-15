@@ -217,5 +217,526 @@ El cuerpo del mensaje de respuesta contiene el recurso de datos solicitados.
 El siguiente imagen muestra un mensaje de respuesta simple:
 ![alt text](https://www.ntu.edu.sg/home/ehchua/programming/webprogramming/images/HTTP_ResponseMessageExample.png)
 
+### Métodos de solicitud HTTP
 ---
+El protocolo HHTP define un conjunto de métodos de solicitud. Un cliente puede usar esos métodos de solicitud para enviar una un mensaje de solicitud a un servidor HTTP. Esos métodos son.
+* GET: Un cliente puede usar la solicitud GET para obtener un recurso del servidor web del servidor.
+* HEAD: Un cliente puede usar la solicitud HEAD para obtener la cabecera que unas solicitud GET puede obtener. Ya que la cabecera contiene la ultima modificación de los datos, esto puede ser usado para comparar con la copia local de la caché.
+* POST: Usado para publicar datos en un servidor web.
+* PUT: Pedir al servidor almacenar datos.
+* DELETE: Pedir al servidor que elimine datos.
+* TRACE: Pedir al servidor que regrese un rastreo de diagnostico de las acciones que realiza.
+* OPTION: Pedir al servidor que regrese una lista de métodos de solicitud soportados.
+* CONNECT: Usado para indicar al proxy que cree una conexión con otro host y simplemente responder el contenido, sin que intente analizar o almacenar en caché.
+* Otras métodos de extensión.
+
+### Metodo de solicitud "GET"
+___
+Get es el método de solicitud HTTP mas común. Un cliente puede usar el método de solicitud GET para solicitar una parte de un recurso en un servidor HTTP. Un mensaje de solicitud GET tiene la siguiente sintaxis. 
+```
+GET request-URI HTTP-version
+(Cabeceras opciones)
+(blank line)
+(Cuerpo de solicitud opcional)
+```
+* La palabra clave GET distingue mayusculas y minúsculas y debe ser escrito con mayusculas.
+* request-URI: especifica la ruta del recurso solicitado, en cual  debe iniciar desde la raes "/" del documento base del directorio.
+* HTTP-version: Ya sea HTTP/1.0 o HTTP/1.1. Este cliente negocia el protocolo a usar para la sesión actual. Por ejemplo, el cliente puede pedir usar HTTP/1.1. Si el servidor no soporta HTTP/1.1, este informará al cliente en la respuesta para que use HTTP/1.0.
+* El cliente puede usar cabeceras opcionales (tales como Accept, Accept-Lenguage, etc) para negociar con el servidor y pedir que envíe contenido especifico(ej., El lenguaje que el cliente prefiere).
+* El mensaje de solicitud GRT tiene un cuerpo de solicitud opcional que contiene la cadena de consulta.
+
+#### Probando solicitud HTTP
+Hay muchas maneras de probar una solicitud HTTP. Puedes usar un programa de utilidades tal como *"telnet"* o *"hyperterm"*, o escribir tu propio programa de red para enviar un mensaje de solicitud a un servidor HTTP para probar las diferentes solicitudes HTTP.
+
+
+##### TELNET
+"Telnet" es una utilidad de red muy útil. Puedes usar telnet para establecer una conexión TPC con un servidor: y emitir una solicitud HTTP. Por ejemplo, supone que iniciaste un servidor HTTP en el localhost (127.0.0.1) en el puerto 8000:
+```
+> telnet
+telnet> help
+... telnet help menu ...
+telnet> open 127.0.0.1 8000
+Connecting To 127.0.0.1...
+GET /index.html HTTP/1.0
+(Hit enter twice to send the terminating blank line ...)
+... HTTP response message ...
+```
+Telnet tiene un protocolo basado en caracteres. Cada carácter que ingresas en el cliente de telnet será enviado al servidor inmediatamente. Por lo tanto, no puedes cometer errores tipográficos cuando ingresas un comando, así como el delete y backspace serán enviados al servidor. Debes habilidad el "local echo" para ver los caracteres que ingresas. Revisa el manual de telnet (Busca en la ayuda de Windows) para detalles de como usar telnet.
+
+##### Programa de red
+Tu puedes crear tu propio programa de red para emitir peticiones HTTP a un servidor HTTP. Tu programa de red primero debe establecer una conexión TCP/IP con el servidor. Una vez que la conexión es establecida, puedes emitir las solicitudes.
+
+Un ejemplo de un programa de red escrito en Java es como el que se muestra (asumiendo que el servidor HTTP esta corriendo en el localhost (dirección IP 127.0.0.1) en el puerto 8000):
+```
+import java.net.*;
+import java.io.*;
+   
+public class HttpClient {
+   public static void main(String[] args) throws IOException {
+      // El host y el servidor serán conectados.
+      String host = "127.0.0.1";
+      int port = 8000;
+      // Crea un socket TCP y conecta host:port.
+      Socket socket = new Socket(host, port);
+      // Crea las flijos de entrada y salida para el socket.
+      BufferedReader in
+         = new BufferedReader(
+              new InputStreamReader(socket.getInputStream()));
+      PrintWriter out
+         = new PrintWriter(socket.getOutputStream(), true);
+      // Enviar la solicitud al servidor HTTP.
+      out.println("GET /index.html HTTP/1.0");
+      out.println();   // blank line separating header & body
+      out.flush();
+      // Lee la respuesta y mostrar en la pantalla de consola.
+      String line;
+      // readLine() regresa null si el servidor cierra el ocket.
+      while((line = in.readLine()) != null) {
+         System.out.println(line);
+      }
+      // Cierra los flujos de E/S.
+      in.close();
+      out.close();
+   }
+}
+```
+
+### Solicitud GET HTTP/1.0
+A continuación se muestra un mensaje de solicitud de un GET HTTP/1.0 (emitido por telnet o tu programa de red - asumiendo que has iniciado el servidor HTTP):
+```
+GET /index.html HTTP/1.0
+(enter twice to create a blank line)
+```
+```
+HTTP/1.1 200 OK
+Date: Sun, 18 Oct 2009 08:56:53 GMT
+Server: Apache/2.2.14 (Win32)
+Last-Modified: Sat, 20 Nov 2004 07:16:26 GMT
+ETag: "10000000565a5-2c-3e94b66c2e680"
+Accept-Ranges: bytes
+Content-Length: 44
+Connection: close
+Content-Type: text/html
+X-Pad: avoid browser bug
+   
+<html><body><h1>It works!</h1></body></html>
+   
+Connection to host lost.
+```
+En este ejemplo, el cliente emite una solicitud GET para pedir por un documento llamado *"índex.html"*; y negocia para usar el protocolo HTTP/1.0. Una linea en blanca es necesaria después de la linea de cabecera. Este mensaje de solicitud no contiene un cuerpo.
+
+El servidor recibe el mensaje de solicitud, interpreta y marea el request-URI a un directorio de documento. Si el documento solicitado esta disponible, el servidor regresa el documento con un estado de estado "200 OK". La cabecera de respuesta provee la descripción necesaria del documento que regresa, tales como la ultima modificación (Last-Modified), el MIME type (Content-Type), y el largo del documento (Content-Length). El cuerpo de respuesta contiene el documento solicitado. El navegador dará formato y mostrará el documento de acuerdo al tipo de medio (ej.Texto plano, HTML, JPWG, GIF, etc) y otra dorfirmacion obtenida de la cabecera de respuesta.
+
+Notas:
+* El método de solicitud GET distingue mayusculas y minúsculas, y debe ser escrito en mayúsculas. 
+* Si el método de solicitud tiene errores de escritura, el servidor regresara un mensaje de error "501 Method Not Implmeented".
+* Si el nombre del método de solicitud no esta permitido, el servidor regresará un mensaje de  error "405 Method Not Allowed". Ej., DELETE es un nombre de método valido, pero no será permitido (o implementado) por el servidor.
+* Si el request-URI no exists, el servidor enviara un mensaje de error "404 Not Found". Tienes que emitir el request-URI adecuado, iniciando por la raíz del documento "/" de otra manera, el servidor regresara un mensaje de respuesta "400 Bad Request".
+SI la HTTP-version no se encuentra o es incorrecto, el servidor regresara un mensaje de respuesta "400 Bad Request".
+EN HTTP/1.0 por defecto, el servidor cierra la conexión TCP después de que la respuesta es entregada. Si usas telnet para conectar con el servidor, el mensaje "Connection to host lost" aparcara inmediatamente después de que el cuerpo de respuesta fue recibido. Puedes usar una cabecera opcional "Connection: Keep-Alive" para solicitar una conexión persistente (o keep-alive), para que otra solicitud pueda ser enviada a través de la misma conexión TCP para lograr una mejor eficiencia de red. Por otro lado HTTP/1.1 usa la conexión keep-alive por defecto.
+
+### Codigo de estado de respuesta
+La primera linea de un mensaje de respuesta (ej. la linea de estado) contiene un código de estado de respuesta, el cual es generado por el servidor para indicar la salida de la solicitud.
+
+El codillo de estado es un numero de 3 dígitos: 
+* 1xx (Información): solicitud recibida: el servidor continua el proceso.
+* 2xx (Exito): La solicitud fue recibida exitosamente, entendida, aceptada y servida.
+* 3xx (Redireccion): Otras medidas deben tomarse antes de completar la solicitud.
+* 4xx (Error de cliente) La respuesta contiene una sintaxis errónea o no puede ser entendida.
+* 5xx (Error de servidor) El servidor falló para cumplir una solicitud valida aparente.
+
+Algunos de los códigos de estado comunes son:
+* 100 Continue: El servidor recibir la solicitud y esta en proceso de dar una respuesta.
+* 200 OK: Respuesta cumplida.
+* 301 Move Permanently:  El recurso solicitado ha sido movido permanentemente a una nueva localización. La URL de la nueva localización es dada en la cabecera llamada "Location". El cliente debe emitir una nueva solicitud para la nueva localización. La aplicación debe actualizar todas las referencias a esta nueva localización.
+* 302 Found & Redirect (or Move Temporarily): Igual que el 301, pero la nueva localización es temporal. El cliente debe emitir una nueva solicitud, pero las aplicaciones no necesitan actualizar las referencias.
+* 304 Not Modified: En respuesta a la condición de petición GET If-Modified-Since, el servidor notifica que el recurso solicitado no se ha modificado.
+* 400 Bad Request: El servidor no pudo interpretar o entender la solicitud, probablemente un error de sintaxis el en mensaje de solicitud.
+* 401 Authentication Required: El recurso solicitado esta protegido, probablemente requiere credenciales del cliente (username/password). El cliente debe re enviar la solicitud con la credenciales (username/password).
+* 403 Forbidden: El servidor se rehusa a suministrar el recurso, si importar la identidad del cliente.
+* 404 Not Found: El recurso requerido no puede ser encontrado en el servidor.
+
+* 405 Method Not Allowed: El método de solicitud usado, ej., POST, PUT, DELETE, es un método valido. Si embargo, el servidor no soporta ese método para el recurso solicitado.
+* 408 Request timeout:
+* 414 Request URI to Large:
+* 500 Internal Server Error: El servidor esta confundido, normalmente causado por un error el programa del servidor que responde a la solicitud.
+* 501 Method Not Implemented: El método de solicitud usado es invalido (puede ser usado por un error de escritura, ej., "GET" escrito como "Get").
+* 502 Bad Gateway: Proxy o Gateway indica que ha recibido una mala respuesta del servidor de origen.
+* 503 Service Unavailable: El servidor no puede responder debido a una sobrecarga o mantenimiento. El cliente puede intentar mas tarde.
+* 503 Gateway Timeout: El Proxy o Gateway indica que ha recibido un timeout del servidor de origen.
+
+### Mas ejemplos de Peticiones GET HTTP/1.0
+
+##### Ejemplo: Metodo de solicitud mal escrito
+En la solicitud, "GET" es escrito como "get". El servidor regresa un error "501 Method Not Implemented". La cabecera de respuesta "Allow" dice al cliente los métodos permitidos.
+```
+get /test.html HTTP/1.0
+(enter twice to create a blank line)
+```
+```
+HTTP/1.1 501 Method Not Implemented
+Date: Sun, 18 Oct 2009 10:32:05 GMT
+Server: Apache/2.2.14 (Win32)
+Allow: GET,HEAD,POST,OPTIONS,TRACE
+Content-Length: 215
+Connection: close
+Content-Type: text/html; charset=iso-8859-1
+   
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>501 Method Not Implemented</title>
+</head><body>
+<h1>Method Not Implemented</h1>
+<p>get to /index.html not supported.<br />
+</p>
+</body></html>
+```
+
+##### Ejemplo: 404 Archivo no encontrado
+En esta solicitud GET, el URL solicitado "/t.html" no puede ser encontrado en el directorio de documentos del servidor. EL servidor regresa un error "404 Not Found".
+```
+GET /t.html HTTP/1.0
+(enter twice to create a blank line)
+
+```
+```
+HTTP/1.1 404 Not Found
+Date: Sun, 18 Oct 2009 10:36:20 GMT
+Server: Apache/2.2.14 (Win32)
+Content-Length: 204
+Connection: close
+Content-Type: text/html; charset=iso-8859-1
+   
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>404 Not Found</title>
+</head><body>
+<h1>Not Found</h1>
+<p>The requested URL /t.html was not found on this server.</p>
+</body></html>
+```
+
+##### Ejemplo: Version HTTP equivocada
+EN sets solicitud GET, la versión HTTP fue mal escrita, resultado de una mala sintaxis. El servidor regresa un error "404 Bad Request". La versión HTTP debe ser  HTTP/1.0 o HTTP/1.1
+```
+GET /index.html HTTTTTP/1.0
+(enter twice to create a blank line)
+```
+```
+HTTP/1.1 400 Bad Request
+Date: Sun, 08 Feb 2004 01:29:40 GMT
+Server: Apache/1.3.29 (Win32)
+Connection: close
+Content-Type: text/html; charset=iso-8859-1
+
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML><HEAD>
+<TITLE>400 Bad Request</TITLE>
+</HEAD><BODY>
+<H1>Bad Request</H1>
+Your browser sent a request that this server could not understand.<P>
+The request line contained invalid characters following the protocol string.<P><P>
+</BODY></HTML>
+```
+Nota: La ultima versión de Apache 2.2.14 ignora este error y regresa el documento con un código de estado "200 OK".
+
+##### Ejemplo: Recurso URI equivocado
+En la siguiente solicitud GET, el URI solicitado no inicia desde la raíz "/", resultando en una "bad request"
+```
+GET test.html HTTP/1.0
+(blank line)
+```
+```
+HTTP/1.1 400 Bad Request
+Date: Sun, 18 Oct 2009 10:42:27 GMT
+Server: Apache/2.2.14 (Win32)
+Content-Length: 226
+Connection: close
+Content-Type: text/html; charset=iso-8859-1
+   
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>400 Bad Request</title>
+</head><body>
+<h1>Bad Request</h1>
+<p>Your browser sent a request that this server could not understand.<br />
+</p>
+</body></html>
+```
+
+##### Ejemplo: Keep-Alive Connection
+Por defecto, para una solicitud HTTP/1.0 el servidor cierra la conexión una ves que la respuesta fue entregada. Puedes solicitad que la conexión TCP continue, (para poder enviar otra solicitud por la misma conexión TCP, (para mejorar la eficiencia de la red) por medio de una cabecera opcional "Connection: Keep-Alive" El servidor incluye una cabecera de respuesta "Connection: Keep-Alive" para informar al cliente que puede enviar otra solicitud usando esta conexión, antes de que se cierre la conexión. Otra cabecera de respuesta "Keep-Alive: timeout=x, max=x" le dice al cliente cuando se cerrara la conexión (en segundos) y numero máximo de solicitudes que puede enviar por medio de esta conexión.
+```
+GET /test.html HTTP/1.0
+Connection: Keep-Alive
+(blank line)
+```
+```
+HTTP/1.1 200 OK
+Date: Sun, 18 Oct 2009 10:47:06 GMT
+Server: Apache/2.2.14 (Win32)
+Last-Modified: Sat, 20 Nov 2004 07:16:26 GMT
+ETag: "10000000565a5-2c-3e94b66c2e680"
+Accept-Ranges: bytes
+Content-Length: 44
+Keep-Alive: timeout=5, max=100
+Connection: Keep-Alive
+Content-Type: text/html
+   
+<html><body><h1>It works!</h1></body></html>
+```
+
+Notas:
+* El mensaje "Connection to host lost" (para telnet) aparece después de que termine el tiempo "keep-alive".
+* Antes de que el mensaje "Conection to host lost" aparezca, puedes enviar otra solicitud a través de la misma conexión TCP.
+* La cabecera "Connection: Keep-alive" no reconoce mayúsculas o minúsculas. El espacio es opcional.
+* Si una cabecera opcional es mal escrita o invalida, será ignorada por el servidor.
+
+##### Ejemplo: Accediendo a un recurso protegido
+La siguiente solicitud GET trata de acceder a un recurso protegido. El servidor regresa un error "403 Forbidden". En este ejemplo, el directorio "htdocs\forbidden" esta configurado para denegar cualquier acceso en la configuración del servidor Apache HTTP en el archivo de configuración "https.conf" como se muestra:
+```
+<Directory "C:/apache/htdocs/forbidden">
+   Order deny,allow
+   deny from all
+</Directory>
+```
+```
+GET /forbidden/index.html HTTP/1.0
+(blank line)
+```
+```
+HTTP/1.1 403 Forbidden
+Date: Sun, 18 Oct 2009 11:58:41 GMT
+Server: Apache/2.2.14 (Win32)
+Content-Length: 222
+Keep-Alive: timeout=5, max=100
+Connection: Keep-Alive
+Content-Type: text/html; charset=iso-8859-1
+   
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>403 Forbidden</title>
+</head><body>
+<h1>Forbidden</h1>
+<p>You don't have permission to access /forbidden/index.html
+on this server.</p>
+</body></html>
+```
+
+### Solicitudes GET condicionales
+EN todos los ejemplos previos, el servidor regresa el documento entero y si la solicitud puede ser completada. Debes usar cabeceras de solicitud adicionales para emitir un una "solicitud condicional". Por ejemplo, para pedir un documento basado en ultima fecha de modificación (para decidir si usar la copia local caché), o para pedir una porción del documento (o rango) en vez del documento entero (útil para descargar documentos grandes).
+
+Las cabeceras de solicitud condicionales incluyen:
+* *If-Modified-Since* (comprueba el coding de  estado de respuesta "304 Not Modified").
+* *If-Unmodified-Since*
+* *If-Match*
+* *If-None-Match*
+* *If-Range*
+
+### Cabeceras de Solicitud
+Esta sección describe algunas de las  cabeceras de solicitud mas usadas. La sintaxis del nombre de cabecera son palabras con la inicial en mayuscula unidas con un guión (-), ej., *Content-Length*, *If-Modified-Since*.
+
+**Host:    doman-name**   -   HTTP/1.1 soporta host virtuales. Múltiples nombres DNS (ej., www.nowhere123.com y www.nowhere456.com) pueden decidir en el mismo servidor físico, con sus propios directorios raíz de documentos. La cabecera *Host* es obligatorio  en HTTP/1.1 para seleccionar uno de los host.
+
+Las siguientes cabeceras pueden ser usadas para negociar contenido por el cliente para pedir al servidor  que envíe el tipo preferido de documentos (en términos de medios, ej., JPEG vs. GIF, o el lenguaje usado ej., Ingles vs Frances) si el servidor mantiene múltiples versiones del mismo documento.
+
+**Accept: mime-type-1, mime-tupe 2,  ...** - El cliente puede usar la cabecera *Accept* para indicar al servidor los MIME types que soporta y prefiere. Si el servidor tiene múltiples versiones del documento solicitado(ej., an imagen GIF and PNG, or a document in TXT or PDF), puede revisar esta cabecera para decidir que versión entregar al cliente. (Ej. PNG es mas avanzad que GIF, pero no todos los navegadores soportan PNG.) Este proceso es llamado negociación de tipo de contenido.
+
+**Accept-Lenguage: lenguage-1, lenguage-2, ...** - EL cliente puede usar la cabecera *Accept-Lenguage* para indicar al servidor cual lenguaje soporta y prefiere. SI el servidor tiene múltiples versiones del documento (ej., en Ingles, Chino, Frances), puede revisar esta cabecera para decidir cual versión regresar. Este proceso es llamado negociación de idioma.
+
+**Accept-Charset: Chartset-1, Charset-2, ...** Para negociar un conjunto de caracteres, El cliente puede usar esta cabecera para informar al servidor cuales conjuntos de caracteres soporta y prefiere. Ejemplos de conjuntos de caracteres son ISO-0059-1, ISO-8859-2, ISO-8859-5, BIG5, UCS2, UCS4, UTF8.
+
+**Accept-Encoding: encoding-method-1, encoding-method-2, ...** - El cliente puede usar esta cabecera para informar al servidor el tipo de codificación que soporta. Si el servidor tiene una versión codificada (o comprimida) del documento solicitado, puede regresar la versión codificada soportada por el cliente. EL servidor puede escoger codificar el documento entes de regresar al cliente para  reducir el tiempo de transmisión. El servidor puede establecer  la cabecera de respuesta "Content-Encoding" para informar al cliente que el documento que regreso esta codificado. Los métodos comunes de codificado son *"x-gzip (.gz, .tgz)"* y *"x-compress (.Z)"*.
+
+**Connection: Close|Keep-Alive** - El cliente puede usar esta cabecera para indicar al servidor si quiere cerrar la conexione después de la solicitud, o para mantener  la conexión abierta para otra solicitud. HTP/1.1 usa conexión persistente (keep-alive) por defecto. HTTP/1.0 cierra la conexión por defecto.
+
+**Refer: refer-URL** - El client usa esta cabecera par indicar la referencia de esta solicitud. Si das click en un link de una pagina web 1 para visitar una pagina web 2, la pagina web 1 es la referencia para la solicitud de la pagina web 2. Todos los navegadores implementan esta cabecera, la cual puede ser usado para rastrear de donde vienen las peticiones (para anuncios web, o contenido personalizado). Si embargo, esta cabecera no es muy confiable y puede ser fácilmente falsificada. 
+
+**User-Agent: browser-type** - Identifica el tipo de navegador usado para hacer la solicitud. El servidor puede usar esta información para regresar diferentes documentos dependiendo del tipo de navegador.
+
+**Content-Length: number-of-bytes** - Usado por la petición POST, para informar al servidor la longitud del cuerpo de respuesta.
+
+**Content-Type: mime-type** - Usado por la petición para informar al servidor el tipo de medios del cuerpo de respuesta.
+
+**Cache-Control: no-cache\...** - El cliente puede usar esta cabecera para especificar como se agregan las paginas a la caché por el servidor proxy. *"no-cache"* requiere que el proxy obtenga una copia actualizada del servidor original, incluso si hay una copia local en la caché. (Los servidores HTTP/1.0 no reconocen *"Cache-Control: no-cache"*. En su ligar, usa *"Pragma: no-cache"*. Incluir ambas cabeceras si no estas seguro de la versión del servidor)
+
+**Authorization:** Usado por el cliente para proporcionar sus credenciales (username/password) para acceder a recursos protegidos.
+
+**Cookie: cookie-name-1=cookie-value-1, coockie-name-2=cookie-value-2, ...** - El cliente usa esta cabecera para regresar los cookies al servidor, los cuales fueron colocados por el servidor antes para estado de administracion.
+
+**If-Modified-Since: date** - Indica al servidor que envíe una copia solo si fue modificada después de una fecha especifica.
+
+### Solicitud Get para Directorio
+Supongamos que un directorio *"testdir"* esta presente en el directorio base de documentos *"htdocs"*.
+Si un cliente emite una solicitud GET a *"/testdir/"* (ej, en el directorio).
+1. El servidor regresara *"/testdir/index.html"* si el directorio contiene un archivo *"index.html"*
+2. De otra manera, el servidor regresara un listado del directorio, si es listado de directorio esta habilitado en la configuración del servidor.
+3. De otra manera, el servidor regresará "404 Page Not Found".
+
+Es interesante tomar nota de que si un cliente emite una solicitud GET *"/testdir"* (sin especificar la ruta del directorio "/"), el servidor regresara una "301 Move Permanently", con una nueva *"Location"* del *"testdir"*, como se muestra:
+```
+GET /testdir HTTP/1.1
+Host: 127.0.0.1
+(blank line)
+```
+```
+HTTP/1.1 301 Moved Permanently
+Date: Sun, 18 Oct 2009 13:19:15 GMT
+Server: Apache/2.2.14 (Win32)
+Location: http://127.0.0.1:8000/testdir/
+Content-Length: 238
+Content-Type: text/html; charset=iso-8859-1
+   
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>301 Moved Permanently</title>
+</head><body>
+<h1>Moved Permanently</h1>
+<p>The document has moved <a href="http://127.0.0.1:8000/testdir/">here</a>.</p>
+
+</body></html>
+```
+La mayoría de los navegadores continuaran con otra solicitud a *"/testdir/"*. Por ejemplo, si tu emites *http://127.0.0.1:8000/testdir* sin el "/" desde un navegador, puedes notar que el "/" fue agregado a la dirección después de que la respuesta fue dada. La moraleja de la historia es: debes incluir el "/" para la solicitud del directorio para ahorrar una solicitud adicional GET.
+
+### Emitir una solicitud GET a través de un servidor proxy
+Para enviar una solicitud GET a través de un servidor proxy, (a) establecer una conexión TCP al servidor proxy; (b) usar un request-URI absoluto *http://hostname:port/path/fileName* al servidor objetivo.
+
+El siguiente rastreo fue capturado usando Telnet. Una conexión es establecida con el servidor proxy, y una solicitud GET es emitida. Request-URI absoluta es usada en la linea de petición.
+
+```
+GET http://www.amazon.com/index.html HTTP/1.1
+Host: www.amazon.com
+Connection: Close
+(blank line)
+```
+```
+HTTP/1.1 302 Found
+Transfer-Encoding: chunked
+Date: Fri, 27 Feb 2004 09:27:35 GMT
+Content-Type: text/html; charset=iso-8859-1
+Connection: close
+Server: Stronghold/2.4.2 Apache/1.3.6 C2NetEU/2412 (Unix)
+Set-Cookie: skin=; domain=.amazon.com; path=/; expires=Wed, 01-Aug-01 12:00:00 GMT
+Connection: close
+Location: http://www.amazon.com:80/exec/obidos/subst/home/home.html
+Via: 1.1 xproxy (NetCache NetApp/5.3.1R4D5)
+   
+ed
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML><HEAD>
+<TITLE>302 Found</TITLE>
+</HEAD><BODY>
+<H1>Found</H1>
+The document has moved
+<A HREF="http://www.amazon.com:80/exec/obidos/subst/home/home.html">
+here</A>.<P>
+</BODY></HTML>
+   
+0
+ 
+```
+Tome en cuenta que la respuesta se devuelve en "trozos".
+
+### Método de Solicitud "HEAD"
+___
+La solicitud HEAD es similar a la petition GET. Sin embargo, el servidor regresa únicamente la cabecera de respuesta sin el cuerpo de la respuesta, el cual contiene el documento actual. La solicitud HEAD es útil para comprobar las cabeceras, tal como *Last-Modified, Content-Type, Content-Length*, antes de enviar la solicitud GET apropiada para recuperar el documento.
+
+La sintaxis de la solicitud HEAD es la siguiente:
+```
+HEAD request-URI HTTP-version
+(other optional request headers)
+(blank line)
+(optional request body)
+```
+
+##### Ejemplo
+```
+HEAD /index.html HTTP/1.0
+(blank line)
+```
+```
+HTTP/1.1 200 OK
+Date: Sun, 18 Oct 2009 14:09:16 GMT
+Server: Apache/2.2.14 (Win32)
+Last-Modified: Sat, 20 Nov 2004 07:16:26 GMT
+ETag: "10000000565a5-2c-3e94b66c2e680"
+Accept-Ranges: bytes
+Content-Length: 44
+Connection: close
+Content-Type: text/html
+X-Pad: avoid browser bug
+```
+Tome en cuenta que la respuesta consiste únicamente en la cabecera sin el cuerpo, el cual contiene el documento actual.
+
+### Metodo de Solicitud "OPTIONS"
+___
+Un cliente puede usar el método de solicitud OPTIONS para consultar cuales métodos de solicitud son soportados. La sintaxis para el mensaje de solicitud OPTIONS es:
+```
+OPTIONS request-URI|* HTTP-version
+(other optional headers)
+(blank line)
+```
+"*" pueden ser usadas en lugar de una request-URI para indicar que la solicitud no aplica a ningún recurso en particular.
+
+##### Ejemplo
+Por ejemplo, la siguiente solicitud OPTIONS es enviada a través de un servidor proxy:
+```
+OPTIONS http://www.amazon.com/ HTTP/1.1
+Host: www.amazon.com
+Connection: Close
+(blank line)
+```
+```
+HTTP/1.1 200 OK
+Date: Fri, 27 Feb 2004 09:42:46 GMT
+Content-Length: 0
+Connection: close
+Server: Stronghold/2.4.2 Apache/1.3.6 C2NetEU/2412 (Unix)
+Allow: GET, HEAD, POST, OPTIONS, TRACE
+Connection: close
+Via: 1.1 xproxy (NetCache NetApp/5.3.1R4D5)
+(blank line)
+```
+Todos los servidores que permiten solicitudes GET aceptarán solicitudes HEAD. Algunas veces, Head no esta listado.
+
+### Metodo de Solicitud "TRACE"
+Un cliente puede en ciar una solicitud TRACE para pedir al servidor que regrese un seguimiento de diagnostico.
+La solicitud TRACE tiene la siguiente sintaxis:
+```
+TRACE / HTTP-version
+(blank line)
+```
+
+##### Ejemplo
+El siguiente ejemplo muestra una solicitud TRACE emitida a través de un servidor proxy.
+```
+TRACE http://www.amazon.com/ HTTP/1.1
+Host: www.amazon.com
+Connection: Close
+(blank line)
+```
+```
+HTTP/1.1 200 OK
+Transfer-Encoding: chunked
+Date: Fri, 27 Feb 2004 09:44:21 GMT
+Content-Type: message/http
+Connection: close
+Server: Stronghold/2.4.2 Apache/1.3.6 C2NetEU/2412 (Unix)
+Connection: close
+Via: 1.1 xproxy (NetCache NetApp/5.3.1R4D5)
+   
+9d
+TRACE / HTTP/1.1
+Connection: keep-alive
+Host: www.amazon.com
+Via: 1.1 xproxy (NetCache NetApp/5.3.1R4D5)
+X-Forwarded-For: 155.69.185.59, 155.69.5.234
+   
+0
+   
+```
+(Para comparar la solicitud TRACE con una ruta de rastro)
+
+
+
  Fuente original: https://www.ntu.edu.sg/home/ehchua/programming/webprogramming/HTTP_Basics.html
