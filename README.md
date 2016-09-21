@@ -778,16 +778,16 @@ El siguiente es un ejemplo de un formulario HTML, el cual es producido por el si
 ![form alt](https://www.ntu.edu.sg/home/ehchua/programming/webprogramming/images/HTML_SampleForm.png)
 
 Un formulario contiene campos. Los tipos de campos incluyen:
-* Text Box: producido por <input type="text">.
-* Password Boc: producido por <input type="password">.
-* Radio Button: producido por <input type="radio">.
-* Checkbox: producido por <input type="checkbox">.
-* Selection: producido por <select> y <option>.
-* Text Area: producido por <textarea>.
-* Submit Button: producido por <input type="submit">.
-* Reset Button: producido por <input type="reset">.
-* Hidden Field: producido por <input type="hidden">.
-* Button: producido por <input type="button">.
+* Text Box: producido por <*input type="text"*>*.
+* Password Boc: producido por <*input type="password"*>.
+* Radio Button: producido por *<input type="radio"*>.
+* Checkbox: producido por *<input type="checkbox"*>.
+* Selection: producido por <*select*> y <*option*>.
+* Text Area: producido por <*textarea*>.
+* Submit Button: producido por <*input type="submit"*>.
+* Reset Button: producido por <*input type="reset"*>.
+* Hidden Field: producido por <*input type="hidden"*>.
+* Button: producido por <*input type="button"*>.
 
 Cada campo tiene un nombre y puede tomar un valor especifico. Una ves que el cliente llena los campos y presiona el botón enviar, el navegador reúne cada uno de los nombre y valores de los campos, los empaquetar en pares "name=value", y contenta todos los campos usando "&" como separador de campo. A esto se le conoce como cadena de consulta. Enviará la cadena de consulta al servidor como parte de la solicitud.
 ```
@@ -1185,7 +1185,7 @@ AddEncoding x-gzip      .gz .tgz
 ```
 
 ###Conexiones Persistentes (o Keep-Alive)
-En HTTP/1.0, el servidor cierra la conexión TCP después de entregar la respuesta por defecto (*Connection: Close*). Es decir, cada conexión TCP sirve solo una solicitud. Esto no es eficiente ya que muchas paginas HTML contienen hyperlinks (vía etiquetas *<a href="url">*) a otros recursos (tales como imágenes, scripts - ya sea locales o de un servidor remoto). Si descargas una pagina con 5 imágenes, el navegador tiene que establecer una conexión TCP 6 veces con el mismo servidor.
+En HTTP/1.0, el servidor cierra la conexión TCP después de entregar la respuesta por defecto (*Connection: Close*). Es decir, cada conexión TCP sirve solo una solicitud. Esto no es eficiente ya que muchas paginas HTML contienen hyperlinks (vía etiquetas <*a href="url"*>) a otros recursos (tales como imágenes, scripts - ya sea locales o de un servidor remoto). Si descargas una pagina con 5 imágenes, el navegador tiene que establecer una conexión TCP 6 veces con el mismo servidor.
 
 El cliente puede negociar con el servidor para pedir que no cierre la conexión después de entregar la respuesta, para que otras solicitudes puedan ser enviadas a través de la misma conexión. A esto se le conoce como conexión persistente (o conexión keep-alive). Las conexiones persistentes han mejorado la eficiencia de la red. Para HTTP/1.0, la conexión por defecto no es persistente. Para pedir una conexión persistente, el cliente debe incluir una cabecera de solicitud "*Connection: Keep-Alive*" en el mensaje de solicitud para negociar con el servidor.
 
